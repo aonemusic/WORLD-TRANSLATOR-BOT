@@ -18,7 +18,7 @@ from telegram.ext import (
 from config import LANGUAGES, get_settings
 from document import extract_document, write_translated_document
 from image_ocr import extract_image_text
-from keyboards import language_home, language_picker, main_menu, retry_keyboard
+from keyboards import language_home, language_picker, main_menu, retry_keyboard, translation_error_keyboard
 from translator import translate_text
 from voice import transcribe_audio
 
@@ -85,11 +85,27 @@ async def _do_translation(update: Update, context: ContextTypes.DEFAULT_TYPE, te
         await _send_long_text(update, f"🌐 {source_name} → {target_name}\n\n{translated}")
         # No successful translation history is retained.
         context.user_data.pop("retry_text", None)
+    except ValueError as exc:
+        # ValueError messages here are controlled by translator.py and never include user text.
+        log.warning("Translation input issue (%s)", type(exc).__name__)
+        await status.edit_text(f"⚠️ {exc}", reply_markup=translation_error_keyboard())
+        context.user_data["retry_text"] = text
+    except RuntimeError as exc:
+        log.warning("Translation runtime issue (%s)", type(exc).__name__)
+        if str(exc).startswith("No Argos translation model is available"):
+            message = (
+                "No offline model is available for this language pair yet. "
+                "Choose another pair, or configure a LibreTranslate server that includes this model."
+            )
+        else:
+            message = "The local translation model could not be loaded. Please retry in a moment."
+        await status.edit_text(f"⚠️ {message}", reply_markup=translation_error_keyboard())
+        context.user_data["retry_text"] = text
     except Exception as exc:
         log.warning("Translation failed (%s)", type(exc).__name__)
         await status.edit_text(
-            "⚠️ I couldn't translate that right now. Check the language pair or try again.",
-            reply_markup=retry_keyboard(),
+            "⚠️ Translation failed unexpectedly. Choose another language pair or try again.",
+            reply_markup=translation_error_keyboard(),
         )
         # Keep only the current failed request in memory for a short-lived retry;
         # it is never written to disk and is cleared on success/cancel.

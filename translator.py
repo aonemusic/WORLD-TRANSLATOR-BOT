@@ -49,12 +49,24 @@ def split_text(text: str, limit: int = 2800) -> list[str]:
 
 
 def detect_language(text: str) -> str:
+    text = text.strip()
+    if len(text) < 3:
+        raise ValueError(
+            "This message is too short for automatic language detection. "
+            "Choose the source language manually, or send a longer message."
+        )
     try:
         code = detect(text)
     except Exception as exc:
         raise ValueError("I couldn't identify the source language. Please choose it manually.") from exc
     # Common detector and Argos code variants.
-    return {"zh-cn": "zh", "zh-tw": "zh", "iw": "he"}.get(code.lower(), code.lower())
+    code = {"zh-cn": "zh", "zh-tw": "zh", "iw": "he"}.get(code.lower(), code.lower())
+    if code not in LANGUAGES:
+        raise ValueError(
+            "Automatic detection found a language that isn't in this bot's source-language list. "
+            "Choose a supported source language manually with /languages."
+        )
+    return code
 
 
 def _argos_prepare(source: str, target: str):

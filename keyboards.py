@@ -44,3 +44,10 @@ def retry_keyboard() -> InlineKeyboardMarkup:
         [_button("🔁 Retry translation", "retry", "success")],
         [_button("✖ Cancel", "cancel", "danger")],
     ])
+
+
+def translation_error_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [_button("🌐 Choose language pair", "langs:home", "primary")],
+        [_button("🔁 Retry translation", "retry", "success"), _button("✖ Cancel", "cancel", "danger")],
+    ])
