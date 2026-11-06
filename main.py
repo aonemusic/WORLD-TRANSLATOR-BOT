@@ -26,6 +26,9 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     level=os.getenv("LOG_LEVEL", "INFO").upper(),
 )
+# HTTPX logs full Telegram API request URLs at INFO, including the bot token.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 log = logging.getLogger("world_translator")
 SETTINGS = get_settings()
 
