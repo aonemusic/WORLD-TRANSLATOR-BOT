@@ -61,11 +61,11 @@ BotFather-ൽ `/setname` ഉപയോഗിച്ച് display name `WORLD TRAN
 ## Render deployment
 
 1. ഈ project ഒരു Git repository-യിലേക്ക് push ചെയ്യുക.
-2. Render-ൽ **Blueprint** വഴി `render.yaml` തിരഞ്ഞെടുക്കുക; അല്ലെങ്കിൽ Docker worker ആയി `Dockerfile` ഉപയോഗിച്ച് service സൃഷ്ടിക്കുക.
+2. Render-ൽ **Web Service** ആയി Dockerfile deploy ചെയ്യുക; Blueprint ഉപയോഗിച്ചാൽ `render.yaml` തിരഞ്ഞെടുക്കുക. App Render നൽകുന്ന `PORT`-ൽ bind ചെയ്യുകയും `/health` health endpoint നൽകുകയും ചെയ്യും.
 3. Render environment/secrets settings-ൽ `BOT_TOKEN` ചേർക്കുക. `render.yaml`-ൽ ഇത് secret prompt ആയി അടയാളപ്പെടുത്തിയിരിക്കുന്നു (`sync: false`). Token source code, README, public issue എന്നിവയിൽ ഇടരുത്.
-4. Deploy കഴിഞ്ഞ് worker logs പരിശോധിക്കുക. ആദ്യ Faster-Whisper/Argos model download-ന് സമയംയും disk-ഉം ആവശ്യമായേക്കാം.
+4. Deploy കഴിഞ്ഞ് service URL-ലും `/health` path-ലും `200 OK` ലഭിക്കുന്നുണ്ടോ പരിശോധിക്കുക. ആദ്യ Faster-Whisper/Argos model download-ന് സമയംയും disk-ഉം ആവശ്യമായേക്കാം.
 
-`render.yaml` worker plan `starter` ആയി സജ്ജീകരിച്ചിട്ടുണ്ട്; provider-ന്റെ നിലവിലെ വിലയും സൗജന്യ/paid plan ലഭ്യതയും deploy ചെയ്യുന്നതിന് മുമ്പ് പരിശോധിക്കുക.
+`render.yaml`-ൽ `free` plan ആണ്. Free Web Service-ുകൾ idle ആകുമ്പോൾ താൽക്കാലികമായി sleep ചെയ്യാം. Polling bot എല്ലായ്പ്പോഴും online വേണമെങ്കിൽ Render-ന്റെ നിലവിലെ uptime/plan പരിധികൾ പരിശോധിക്കുക.
 
 ## Koyeb deployment
 

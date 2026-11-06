@@ -1,10 +1,11 @@
 services:
-  - type: worker
+  - type: web
     name: world-translator-bot
     runtime: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    healthCheckPath: /health
     envVars:
       - key: BOT_TOKEN
         sync: false

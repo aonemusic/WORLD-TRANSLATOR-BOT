@@ -4,11 +4,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import threading
 import tempfile
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from telegram import Update
-from telegram.constants import ChatAction
 from telegram.ext import (
     Application, CallbackQueryHandler, CommandHandler, ContextTypes,
     MessageHandler, filters,
@@ -299,7 +300,35 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     log.error("Unhandled bot error (%s)", type(error).__name__ if error else "unknown")
 
 
+def start_health_server() -> ThreadingHTTPServer:
+    """Bind a tiny HTTP health endpoint for Render's Web Service monitor."""
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            if self.path not in {"/", "/health"}:
+                self.send_error(404)
+                return
+            body = b"WORLD TRANSLATOR is running.\n"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            # Routine Render health probes should not clutter application logs.
+            return
+
+    port = int(os.getenv("PORT", "8000"))
+    server = ThreadingHTTPServer(("0.0.0.0", port), HealthHandler)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, name="render-health", daemon=True).start()
+    log.info("Render health endpoint listening on 0.0.0.0:%s", port)
+    return server
+
+
 def main() -> None:
+    start_health_server()
     app = Application.builder().token(SETTINGS.bot_token).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
